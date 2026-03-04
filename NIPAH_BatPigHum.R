@@ -98,7 +98,7 @@ param <- param.dcm(
                    # Human
                    sigma   =1/9,
                    rho     =1/6,
-                   mu      =0.3,               #c(0.1, 0.3, 0.5), #seq(0.0, 0.3, 0.03),  # Vary Mu from 0 to 0.3 in increments of 0.03  # Kerala 0.076
+                   mu      =0.3,                  # c(0.1, 0.3, 0.5), #seq(0.0, 0.3, 0.03),  # Vary Mu from 0 to 0.3 in increments of 0.03  # Kerala 0.076
                    #delta1  =1,
                    delta_h =0.71315524,
                    beta_HH =0.69733082)
@@ -106,11 +106,11 @@ param <- param.dcm(
 
 init <- init.dcm(
 # Bat
-s_b.num = 499, e_b.num=0, i_b.num = 1, r_b.num = 0, d_b.num = 0,
+s_b.num = 500, e_b.num=0, i_b.num = 0, r_b.num = 0, d_b.num = 0,
 # Pig
 s_p.num = 500, e_p.num=0, i_p.num = 0, r_p.num = 0, d_p.num = 0,
 # Human
-s_h.num = 1000, e_h.num=0, i_h.num = 0, r_h.num = 0, d_h.num = 0)
+s_h.num = 999, e_h.num=0, i_h.num = 1, r_h.num = 0, d_h.num = 0)
 
 control <- control.dcm(nsteps = 365, new.mod = Nipah)
 
@@ -122,9 +122,9 @@ sim <- dcm(param, init, control)
 
 sim <- mutate_epi(sim,
                   # Populations Total
-                  b.total = s_b.num + e_b.num + i_b.num + r_b.num,
-                  p.total = s_p.num + e_p.num + i_p.num + r_p.num,
-                  h.total = s_h.num + e_h.num + i_h.num + r_h.num,
+                  b.total = s_b.num + e_b.num + i_b.num + r_b.num + d_b.num,
+                  p.total = s_p.num + e_p.num + i_p.num + r_p.num + d_p.num,
+                  h.total = s_h.num + e_h.num + i_h.num + r_h.num + d_h.num,
 
                   i_b.total = i_b.num,
                   i_p.total = i_p.num,
@@ -139,13 +139,26 @@ sim <- mutate_epi(sim,
 sim <- mutate_epi(sim,
                   cum_total_h = cum_PH + cum_HH)          # Total Outbreak pada Manusia
 
-sim <- mutate_epi(sim,                                                          
-                  prop_spillover = ifelse(cum_total_h>0,
-                                          cum_PH/cum_total_h,0)) # Proporsi Outbreak dari Hewan
+#sim <- mutate_epi(sim,                                                          
+                  #prop_spillover = ifelse(cum_total_h>0,
+                                          #cum_PH/cum_total_h,0)) # Proporsi Outbreak dari Hewan
 
+sim <- mutate_epi(sim,                                                          
+                  cum_death_h = d_h.num)
+
+sim <- mutate_epi(sim,
+                  cum_infec_h = init$s_h.num - s_h.num)
+
+c(
+  cumulative_infection = tail(sim$epi$cum_infec_h,1),
+  cumulative_death     = tail(sim$epi$cum_death_h,1))
+
+#sum(sim$epi$cum_death_h)
+#sum(sim$epi$i_h.total)
+#tail(sim$epi$cum_death_h)
 #tail(sim$epi$prop_spillover) # Melihat hasil hari terakhir
 #summary(sim$epi$prop_spillover)
-#summary(sim$epi$i_h.total)
+#tail(sim$epi$i_h.total)
 
 # ======================
 # R0 SECTION (Integrated)
@@ -229,7 +242,7 @@ matplot(time,
         xlab = "Time (Days)",
         ylab = "Number",
         main = "Comparison of Infections",
-        ylim = c(0,150))
+        ylim = c(0,5))
 
 cols <- c("blue","red","darkgreen")
 
@@ -283,7 +296,7 @@ matplot(time,
         xlab = "Time (Days)",
         ylab = "Number",
         main = "Comparison of Death",
-        ylim = c(0,600))
+        ylim = c(0,10))
 
 cols <- c("blue","red","darkgreen")
 
